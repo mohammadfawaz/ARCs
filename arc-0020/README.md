@@ -35,7 +35,7 @@ Without a standard interface, every DeFi program must import each token at compi
 The fungible token interface. Every ARC-20 token must implement these functions and **`view fn`** accessors:
 
 ```leo
-interface IARC20 {
+export interface IARC20 {
     record Token {
         owner: address,
         amount: u128,
@@ -45,8 +45,14 @@ interface IARC20 {
     //               TRANSFER FUNCTIONS
     //=============================================================
     fn transfer_public(public recipient: address, public amount: u128) -> Final;
-    fn transfer_private(private input: Token, private recipient: address, private amount: u128) -> (Token, Token);
-    fn transfer_private_to_public(private input: Token, public recipient: address, public amount: u128) -> (Token, Final);
+    fn transfer_private(private input: Token, private recipient: address, private amount: u128) -> (
+        Token, Token,
+    );
+    fn transfer_private_to_public(
+        private input: Token,
+        public recipient: address,
+        public amount: u128,
+    ) -> (Token, Final);
     fn transfer_public_to_private(private recipient: address, public amount: u128) -> (Token, Final);
     fn transfer_public_as_signer(public recipient: address, public amount: u128) -> Final;
     fn transfer_from_public(public owner: address, public recipient: address, public amount: u128) -> Final;
@@ -55,19 +61,16 @@ interface IARC20 {
         private recipient: address,
         public amount: u128,
     ) -> (Token, Final);
-
     //=============================================================
     //               APPROVAL FUNCTIONS
     //=============================================================
     fn approve_public(public spender: address, public amount: u128) -> Final;
     fn unapprove_public(public spender: address, public amount: u128) -> Final;
-
     //=============================================================
     //               JOIN/SPLIT FUNCTIONS
     //=============================================================
     fn join(private input_1: Token, private input_2: Token) -> Token;
     fn split(private input: Token, private amount: u128) -> (Token, Token);
-
     //=============================================================
     //                VIEW FUNCTIONS
     //=============================================================
@@ -128,6 +131,9 @@ A DeFi program that accepts any ARC20 token by program identifier:
 
 ```leo
 program my_exchange.aleo {
+    @noupgrade
+    constructor() {}
+
     fn swap(
         public token_in: identifier,   // program name of any ARC20 token
         public token_out: identifier,  // program name of another ARC20 token
@@ -136,11 +142,14 @@ program my_exchange.aleo {
     ) -> Final {
         // Pull tokens from the user (requires prior approve_public)
         let transfer_in: Final = IARC20@(token_in)::transfer_from_public(
-            self.signer, self.address, amount_in
+            std::ctx::signer(),
+            std::ctx::addr(),
+            amount_in,
         );
         // Send tokens to the user
         let transfer_out: Final = IARC20@(token_out)::transfer_public(
-            self.signer, amount_out
+            std::ctx::signer(),
+            amount_out,
         );
         return final {
             transfer_in.run();
@@ -175,6 +184,9 @@ A program declares interface conformance with `: InterfaceName`:
 
 ```leo
 program my_token.aleo: IARC20 {
+    @noupgrade
+    constructor() {}
+
     record Token {
         owner: address,
         amount: u128,
@@ -209,7 +221,7 @@ For developers familiar with Ethereum's ERC-20 standard:
 
 | ERC-20 | ARC-20 (**`IARC20`**) | Notes |
 |--------|----------------------|-------|
-| `balanceOf(address)` | `view fn balance_of(account) -> u128` | Off-consensus read via Leo v4.0 **`view fn`**; underlying `balances` mapping also queryable directly |
+| `balanceOf(address)` | `view fn balance_of(account) -> u128` | Off-consensus read via Leo 4.4.0 **`view fn`**; the underlying `balances` mapping is also queryable directly |
 | `totalSupply()` | `view fn supply() -> u128` | Reads `storage token_info.supply`; `view fn max_supply() -> u128` exposes the configured cap |
 | `decimals()` | `view fn decimals() -> u8` | Reads `storage token_info.decimals` |
 | `name()` / `symbol()` | `view fn name() -> identifier` / `view fn symbol() -> identifier` | Reference wrappers return Leo identifier literals (`'wCredits'`, `'wCRD'`, `'wTokReg'`, `'wTR'`) |
@@ -227,7 +239,7 @@ For developers familiar with Ethereum's ERC-20 standard:
 
 **Arithmetic overflow/underflow**: Leo's `u128` arithmetic aborts the transaction on underflow/overflow (enforced by the Aleo VM). Implementations therefore omit redundant explicit `assert(... >= amount)` checks in `transfer_from_public`, `transfer_from_public_to_private`, and `unapprove_public` -- the VM aborts naturally on underflow.
 
-**`self.caller` vs `self.signer`**: Wrapper programs must carefully distinguish between `self.caller` (the immediate caller, which may be another program) and `self.signer` (the transaction originator). Deposit functions use `self.signer` to pull from the user's underlying balance, while transfer functions use `self.caller` for composability with DeFi programs. The interface exposes both `transfer_public` (caller-scoped) and `transfer_public_as_signer` (signer-scoped) so consumers can pick the appropriate semantics.
+**`std::ctx::caller()` vs `std::ctx::signer()`**: Wrapper programs must distinguish between `std::ctx::caller()` (the immediate caller, which can be another program) and `std::ctx::signer()` (the transaction originator). Deposit functions use `std::ctx::signer()` to pull from the user's underlying balance. Transfer functions use `std::ctx::caller()` for composability with DeFi programs. The interface provides `transfer_public` for caller-scoped transfers and `transfer_public_as_signer` for signer-scoped transfers.
 
 
 
@@ -245,7 +257,7 @@ The program for the native Aleo Credits asset cannot directly implement the **`I
 A **stateless** wrapper (pure forwarding) cannot work because:
 
 - Interface conformance cannot rename records or remap field names
-- `self.caller` in the underlying program would be the wrapper, not the original caller -- breaking escrow patterns where a third-party program needs to hold tokens
+- `std::ctx::caller()` in the underlying program would return the wrapper address, not the original caller address. This behavior breaks escrow patterns where a third-party program must hold tokens.
 
 A **stateful** wrapper maintains its own `balances` mapping and exposes the standard **`IARC20`** interface. Deposit/withdraw functions bridge between the wrapper's internal balances and the underlying program. 
 
