@@ -138,8 +138,6 @@ record ComplianceRecord {
 
 The interface declares both records with `..`, so implementations may add fields.
 
-Leave visibility modifiers off record inputs and outputs in implementing functions. An omitted mode matches `private` in the interface.
-
 ### `IARC22Freezelist`
 
 The freeze list prevents sanctioned or compromised addresses from transacting. It uses a Merkle tree to enable privacy-preserving verification.
