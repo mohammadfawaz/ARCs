@@ -34,7 +34,7 @@ The ARC-22 standard provides the [`IARC22`](./IARC22) library for Leo 4.4.3. The
 - Two interfaces, **`IARC22`** and **`IARC22Freezelist`**, defining the token and freeze-list contracts
 - A **`MerkleProof`** struct used by the non-inclusion proof flow
 - A small set of **constants** (`MAX_TREE_DEPTH`, `ZERO_ADDRESS`, `EMPTY_ROOT`)
-- **Merkle helper functions** that implementations call to verify proofs
+- Internal **Merkle helper functions** for proof verification
 
 ### `IARC22`
 
@@ -202,7 +202,7 @@ When the freeze list is updated, the Merkle root changes. A `block_height_window
 
 ### Library Constants
 
-The `IARC22` library exports the following constants. Implementations should use these values.
+The `IARC22` library defines the following private constants.
 
 | Constant | Type | Value | Purpose |
 |----------|------|-------|---------|
@@ -231,7 +231,7 @@ Use `IARC22::IARC22` as the token interface and `IARC22::IARC22Freezelist` as th
 
 ### Merkle Helper Functions
 
-The library exposes helpers that implementations use to verify Merkle proofs. They use Poseidon4 hashes with a domain-separation tag (`0field` for internal nodes, `1field` for leaf pairs).
+The following helper functions are private to the library. They use Poseidon4 hashes with a domain-separation tag (`0field` for internal nodes, `1field` for leaf pairs).
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
