@@ -1,13 +1,13 @@
 // The 'IARC22' library.
-const MAX_TREE_DEPTH: u32 = 15u32;
+export const MAX_TREE_DEPTH: u32 = 15u32;
 
 // ZERO_ADDRESS as field == 0field
-const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
+export const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
 
 // EMPTY_ROOT == hash of H(ZERO_ADDRESS, ZERO_ADDRESS)
-const EMPTY_ROOT: field = 3642222252059314292809609689035560016959342421640560347114299934615987159853field;
+export const EMPTY_ROOT: field = 3642222252059314292809609689035560016959342421640560347114299934615987159853field;
 
-struct MerkleProof {
+export struct MerkleProof {
     siblings: [field; MAX_TREE_DEPTH + 1],
     leaf_index: u32,
 }
@@ -18,7 +18,7 @@ struct MerkleProof {
 // Calculates the hash of two sibling nodes in a Merkle tree.
 // The order of the siblings depends on the index bit (0 = left, 1 = right).
 // Uses Poseidon hash to compute the result.
-fn calculate_hash_for_nodes(sibling1: field, sibling2: field, indexbit: u32) -> field {
+export fn calculate_hash_for_nodes(sibling1: field, sibling2: field, indexbit: u32) -> field {
     let poseidon_params: [field; 3] = indexbit == 0u32 ? [0field, sibling1, sibling2] : [
         0field,
         sibling2,
@@ -27,7 +27,7 @@ fn calculate_hash_for_nodes(sibling1: field, sibling2: field, indexbit: u32) -> 
     return Poseidon4::hash_to_field(poseidon_params);
 }
 
-fn calculate_hash_for_leaves(sibling1: field, sibling2: field, indexbit: u32) -> field {
+export fn calculate_hash_for_leaves(sibling1: field, sibling2: field, indexbit: u32) -> field {
     let poseidon_params: [field; 3] = indexbit == 0u32 ? [1field, sibling1, sibling2] : [
         1field,
         sibling2,
@@ -40,7 +40,7 @@ fn calculate_hash_for_leaves(sibling1: field, sibling2: field, indexbit: u32) ->
 // Iteratively hashes the sibling path based on the leaf index to reconstruct the root.
 // Stops when a zero field is encountered in the siblings array, indicating the end of the valid path.
 // Returns the calculated root and the actual depth reached.
-fn calculate_root_depth_siblings(merkle_proof: MerkleProof) -> (field, u32) {
+export fn calculate_root_depth_siblings(merkle_proof: MerkleProof) -> (field, u32) {
     let root: field = calculate_hash_for_leaves(
         merkle_proof.siblings[0u8],
         merkle_proof.siblings[1u8],
@@ -62,7 +62,7 @@ fn calculate_root_depth_siblings(merkle_proof: MerkleProof) -> (field, u32) {
 // Verifies that the given address is included in a Merkle tree.
 // Asserts that the address matches the first sibling (leaf node).
 // Computes the Merkle root and returns it for comparison against a known root.
-fn verify_inclusion(addr: address, merkle_proof: MerkleProof) -> field {
+export fn verify_inclusion(addr: address, merkle_proof: MerkleProof) -> field {
     assert_eq(addr as field, merkle_proof.siblings[0u32]);
     let (root, depth): (field, u32) = calculate_root_depth_siblings(merkle_proof);
     return root;
@@ -72,7 +72,7 @@ fn verify_inclusion(addr: address, merkle_proof: MerkleProof) -> field {
 // Accepts two Merkle proofs representing the neighboring leaves around the missing address.
 // Returns the common Merkle root if the address is proven to be outside the tree.
 // If the tree is not sorted correctly, this function may return incorrect results.
-fn verify_non_inclusion(addr: address, merkle_proofs: [MerkleProof; 2]) -> field {
+export fn verify_non_inclusion(addr: address, merkle_proofs: [MerkleProof; 2]) -> field {
     let (root1, depth1): (field, u32) = calculate_root_depth_siblings(merkle_proofs[0u32]);
     let (root2, depth2): (field, u32) = calculate_root_depth_siblings(merkle_proofs[1u32]);
 
@@ -108,7 +108,7 @@ fn verify_non_inclusion(addr: address, merkle_proofs: [MerkleProof; 2]) -> field
     return root1;
 }
 
-interface IARC22Freezelist {
+export interface IARC22Freezelist {
     fn initialize(public admin: address, public blocks: u32) -> Final;
     fn update_freeze_list(
         public account: address,
@@ -131,7 +131,7 @@ interface IARC22Freezelist {
     view fn block_height_window() -> u32;
 }
 
-interface IARC22 {
+export interface IARC22 {
     record Token {
         owner: address,
         amount: u128,

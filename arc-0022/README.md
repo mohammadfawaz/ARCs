@@ -29,7 +29,7 @@ ARC-22 adds these capabilities while preserving Aleo's privacy guarantees throug
 
 ## Specification
 
-The ARC-22 standard provides a library ([`IARC22`](./IARC22)), which is composed of:
+The ARC-22 standard provides the [`IARC22`](./IARC22) library for Leo 4.4.3. The library contains:
 
 - Two interfaces, **`IARC22`** and **`IARC22Freezelist`**, defining the token and freeze-list contracts
 - A **`MerkleProof`** struct used by the non-inclusion proof flow
@@ -41,7 +41,7 @@ The ARC-22 standard provides a library ([`IARC22`](./IARC22)), which is composed
 The compliant token surface adds freeze-list enforcement (via Merkle non-inclusion proofs on private sends) and investigator-visible **`ComplianceRecord`** outputs on every transition that materially changes a balance. Mappings and storage variables are intentionally **not** part of the interface; only function signatures and the records (**`Token`**, **`ComplianceRecord`**) form the contract.
 
 ```leo
-interface IARC22 {
+export interface IARC22 {
     record Token {
         owner: address,
         amount: u128,
@@ -138,12 +138,14 @@ record ComplianceRecord {
 
 The interface declares both records with `..`, so implementations may add fields.
 
+Leave visibility modifiers off record inputs and outputs in implementing functions. An omitted mode matches `private` in the interface.
+
 ### `IARC22Freezelist`
 
 The freeze list prevents sanctioned or compromised addresses from transacting. It uses a Merkle tree to enable privacy-preserving verification.
 
 ```leo
-interface IARC22Freezelist {
+export interface IARC22Freezelist {
     fn initialize(public admin: address, public blocks: u32) -> Final;
     fn update_freeze_list(
         public account: address,
@@ -210,14 +212,22 @@ The `IARC22` library exports the following constants. Implementations should use
 
 ### `MerkleProof`
 
-`MerkleProof` is defined in the `IARC22` library itself. Implementations reference it directly as `MerkleProof`.
+`MerkleProof` is defined and exported by the `IARC22` library:
 
 ```leo
-struct MerkleProof {
+export struct MerkleProof {
     siblings: [field; MAX_TREE_DEPTH + 1],
     leaf_index: u32,
 }
 ```
+
+Implementing programs and their callers must use `IARC22::MerkleProof` in type declarations and struct expressions. A separate local struct does not match this type, even if its name and fields are identical. Add `IARC22` as a dependency in each package that uses the type. For example, the private transfer functions use this parameter type:
+
+```leo
+sender_merkle_proofs: [IARC22::MerkleProof; 2u32]
+```
+
+Use `IARC22::IARC22` as the token interface and `IARC22::IARC22Freezelist` as the freeze-list interface.
 
 ### Merkle Helper Functions
 
