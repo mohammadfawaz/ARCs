@@ -219,10 +219,6 @@ export struct MerkleProof {
 }
 ```
 
-Use `IARC22::MerkleProof` in implementing programs and their callers.
-
-Use `IARC22::IARC22` as the token interface and `IARC22::IARC22Freezelist` as the freeze-list interface.
-
 ### Merkle Helper Functions
 
 The following helper functions are private to the library. They use Poseidon4 hashes with a domain-separation tag (`0field` for internal nodes, `1field` for leaf pairs).
