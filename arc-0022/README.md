@@ -221,11 +221,7 @@ export struct MerkleProof {
 }
 ```
 
-Implementing programs and their callers must use `IARC22::MerkleProof` in type declarations and struct expressions. A separate local struct does not match this type, even if its name and fields are identical. Add `IARC22` as a dependency in each package that uses the type. For example, the private transfer functions use this parameter type:
-
-```leo
-sender_merkle_proofs: [IARC22::MerkleProof; 2u32]
-```
+Use `IARC22::MerkleProof` in implementing programs and their callers.
 
 Use `IARC22::IARC22` as the token interface and `IARC22::IARC22Freezelist` as the freeze-list interface.
 
