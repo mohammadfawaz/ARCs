@@ -29,7 +29,7 @@ ARC-22 adds these capabilities while preserving Aleo's privacy guarantees throug
 
 ## Specification
 
-The ARC-22 standard provides the [`IARC22`](./IARC22) library for Leo 4.4.3. The library contains:
+The ARC-22 standard provides a library ([`IARC22`](./IARC22)), which is composed of:
 
 - Two interfaces, **`IARC22`** and **`IARC22Freezelist`**, defining the token and freeze-list contracts
 - A **`MerkleProof`** struct used by the non-inclusion proof flow
